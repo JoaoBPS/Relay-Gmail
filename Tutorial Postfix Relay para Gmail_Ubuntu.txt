@@ -1,0 +1,61 @@
+Configurando Postfix como Relay para Gmail ou Google Workspace
+
+Testado no Ubuntu Linux versão 20.04 64bits
+
+##########################################################################################################################
+Observação importante: Este tutorial teve exito liberando o acesso a senha de 16 digitos no Gmail.
+Segue o link de referencia para habilitar a senha de 16 digitos para que não tenha problema de senha.
+
+https://www.linode.com/docs/guides/configure-postfix-to-send-mail-using-gmail-and-google-workspace-on-debian-or-ubuntu/
+##########################################################################################################################
+
+Segue o passo a passo  abaixo:
+
+1-Mude o nome da maquina via comando hostname  Exemplo: hostname server.net
+2-Instale os pacotes do postfix mailx e cyrus-sasl Exemplo: apt-get install libsasl2-modules  postfix  mailutils
+3-Edite o arquivo /etc/postfix/main.cf
+###############################################################################################
+nano /etc/postfix/main.cf
+
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_tls_security_level = encrypt
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_secutiry_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+smtp_relay_restrictions = allow_mynetworks, allow_sasl_authenticated, defer_unauth_destination
+
+################################################################################################
+
+4-Edite o arquivo /etc/postfix/sasl_passwd
+
+nano /etc/postfix/sasl_passwd
+
+[smtp.gmail.com]:587  seu_email_no_gmail:senha especial para aplicativos com 16 digitos
+Exemplo:   teste123@gmail.com:senha de 16 digitos tudo junto
+
+5-Apos editar o arquivo /etc/postfix/sasl_passwd digite o comando abaixo:
+
+postmap /etc/postfix/sasl_passwd
+
+Mude o dono  do arquivo /etc/postfix/sasl_passwd e /etc/postfix/sasl_passwd.db
+chown root:root /etc/postfix/sasl_passwd  /etc/postfix/sasl_passwd.db
+
+Mude as permissoes de acessso com o comando abaixo:
+chmod 0600 /etc/postfix/sasl_passwd  /etc/postfix/sasl_passwd.db
+
+6-Apos feitos os passos anteriores reinicie o servico do Postfix
+
+systemctl enable postfix
+systemctl restart postfix
+service restart postfix
+
+7-Testando envio de mensagem como o exemplo abaixo:
+
+echo "Teste email relay Postfix" | mail -s "Teste email" teste123@gmail.com
+
+8-Verifique no seu email se a mensagem chegou com sucesso.
+
+
